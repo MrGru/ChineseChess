@@ -7,6 +7,8 @@ import (
 	_ "image/png"
 	"log"
 
+	"github.com/hajimehoshi/ebiten/inpututil"
+
 	"github.com/hajimehoshi/ebiten/ebitenutil"
 
 	"github.com/MrGru/ChineseChess/res"
@@ -30,17 +32,26 @@ var (
 
 func update(screen *ebiten.Image) error {
 
+	Input()
 	if ebiten.IsDrawingSkipped() {
 		return nil
 	}
 	screen.Fill(color.NRGBA{0xff, 0x00, 0x00, 0xff})
-
 	opts := &ebiten.DrawImageOptions{}
 	opts.GeoM.Translate(0, 0)
 	screen.DrawImage(backgroundFrame, opts)
 	DrawTable(screen)
 	board.Draw(screen)
 	return nil
+}
+
+func Input() {
+	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+		board.HandleReleaseEvent(ebiten.CursorPosition())
+	}
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		board.HandleTouchEvent(ebiten.CursorPosition())
+	}
 }
 
 func DrawTable(screen *ebiten.Image) {
@@ -85,6 +96,7 @@ func main() {
 	}
 	backgroundFrame, _ = ebiten.NewImageFromImage(bg, ebiten.FilterDefault)
 	board = &Board{}
+	board.InitPosition(screenWidth, screenHeight, cellSize)
 	board.CreatePiece()
 
 	if err := ebiten.Run(update, screenWidth, screenHeight, 1, "Chinese Chess"); err != nil {
